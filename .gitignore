@@ -103,5 +103,8 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# PyCharm files
+.idea/
+
 # Training models
 models/training/
