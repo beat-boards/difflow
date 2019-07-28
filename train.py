@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 
+import os
 import math
 import sys
 
@@ -15,14 +16,18 @@ from tensorflow.python.data import Dataset
 
 from create import create_linear_regressor
 
-if len(sys.argv) < 4 | len(sys.argv) > 5:
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
+
+if len(sys.argv) < 5 or len(sys.argv) > 6:
+    print(sys.argv, len(sys.argv))
     print("Invalid arguments")
     sys.exit(1)
 
 learning_rate = float(sys.argv[1])
 steps = int(sys.argv[2])
 batch_size = int(sys.argv[3])
-data_file = sys.argv[4] if len(sys.argv) == 5 else "file.csv"
+regulation_strength = float(sys.argv[4])
+data_file = sys.argv[5] if len(sys.argv) == 6 else "resources/ata.csv"
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 pd.options.display.max_rows = 10
@@ -34,24 +39,31 @@ beatmaps_dataframe = beatmaps_dataframe.reindex(np.random.permutation(beatmaps_d
 
 def preprocess_features(beatmaps_dataframe):
     selected_features = beatmaps_dataframe[[
+        "is_easy",
+        "is_normal",
+        "is_hard",
+        "is_expert",
+        "is_expert_plus",
+        "length",
+        "bpm",
+        "note_jump_speed",
         "note_count",
         "bomb_count",
-        "length_seconds",
-        "bpm"
+        "notes_per_second",
+        "obstacle_count"
     ]]
 
     processed_features = selected_features.copy()
-    processed_features["notes_per_second"] = (beatmaps_dataframe["note_count"] / beatmaps_dataframe["length_seconds"])
     return processed_features
 
 
 def preprocess_targets(beatmaps_dataframe):
     output_targets = pd.DataFrame()
-    output_targets["median_house_value"] = beatmaps_dataframe["median_house_value"]
+    output_targets["rating"] = beatmaps_dataframe["rating"]
     return output_targets
 
 
-training_count = len(beatmaps_dataframe.index) / 4 * 3
+training_count = int(len(beatmaps_dataframe.index) * 0.75)
 validation_count = len(beatmaps_dataframe.index) - training_count
 
 training_examples = preprocess_features(beatmaps_dataframe.head(training_count))
@@ -101,22 +113,22 @@ def train_model(
     periods = 10
     steps_per_period = steps / periods
 
-    linear_regressor = create_linear_regressor(learning_rate, feature_columns, "models/training")
+    linear_regressor = create_linear_regressor(learning_rate, feature_columns, "models/training", regulation_strength)
 
     training_input_fn = lambda: input_fn(
         training_examples,
-        training_targets["difficulty"],
+        training_targets["rating"],
         batch_size=batch_size
     )
     predict_training_input_fn = lambda: input_fn(
         training_examples,
-        training_targets["difficulty"],
+        training_targets["rating"],
         num_epochs=1,
         shuffle=False
     )
     predict_validation_input_fn = lambda: input_fn(
         validation_examples,
-        validation_targets["difficulty"],
+        validation_targets["rating"],
         num_epochs=1,
         shuffle=False
     )
