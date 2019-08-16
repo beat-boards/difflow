@@ -39,18 +39,17 @@ beatmaps_dataframe = beatmaps_dataframe.reindex(np.random.permutation(beatmaps_d
 
 def preprocess_features(beatmaps_dataframe):
     selected_features = beatmaps_dataframe[[
-        "is_easy",
-        "is_normal",
-        "is_hard",
-        "is_expert",
-        "is_expert_plus",
         "length",
         "bpm",
         "note_jump_speed",
         "note_count",
         "bomb_count",
+        "dot_count",
         "notes_per_second",
-        "obstacle_count"
+        "dots_per_note",
+        "obstacle_count",
+        "entropy",
+        "entropy_no_position"
     ]]
 
     processed_features = selected_features.copy()
