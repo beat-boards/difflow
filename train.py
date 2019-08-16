@@ -49,7 +49,8 @@ def preprocess_features(beatmaps_dataframe):
         "dots_per_note",
         "obstacle_count",
         "entropy",
-        "entropy_no_position"
+        "entropy_no_dispersion",
+        "entropy_dispersion"
     ]]
 
     processed_features = selected_features.copy()
